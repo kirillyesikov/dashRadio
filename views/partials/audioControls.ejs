@@ -50,6 +50,19 @@
         border-radius: 9999px;
         background-color: #10B981;
     }
+
+    .song-info {
+        min-height: 4rem;
+    }
+
+    .song-info img {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+
+    .song-info:hover img {
+        transform: scale(1.05);
+    }
 </style>
 
 <script>
@@ -237,14 +250,15 @@
         ws = new WebSocket(`${protocol}//${window.location.host}`);
 
         ws.onopen = () => {
+            console.log('WebSocket Connected');
             wsConnected = true;
             updateAllSongInfoUI();
         };
 
         ws.onclose = () => {
+            console.log('WebSocket Disconnected');
             wsConnected = false;
             updateAllSongInfoUI();
-            // Reconnect after 5 seconds
             setTimeout(connectWebSocket, 5000);
         };
 
@@ -263,8 +277,15 @@
                     const jsonStr = data.substring(2);
                     const [eventName, songData] = JSON.parse(jsonStr);
 
-                    // Update stored song info
+                    // Update stored song info for each station
                     Object.entries(songData).forEach(([stationId, info]) => {
+                        // Format duration to MM:SS
+                        if (info.duration) {
+                            const minutes = Math.floor(info.duration / 60);
+                            const seconds = info.duration % 60;
+                            info.formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        }
+
                         songInfos[stationId] = info;
                         updateSongInfoUI(stationId);
                     });
@@ -280,23 +301,36 @@
         if (!container) return;
 
         const info = songInfos[stationId];
-        if (!info) return;
-
-        container.innerHTML = `
-            <div>
-                <div class="song-title text-gray-100">${info.title || 'Unknown Title'}</div>
-                <div class="song-artist">${info.artist || 'Unknown Artist'}</div>
-                <div class="live-indicator mt-1">
-                    <div class="live-dot"></div>
-                    <span>Live</span>
-                </div>
+        if (!info) {
+            container.innerHTML = `
+            <div class="flex items-center space-x-2 text-gray-400">
+                <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                <span class="text-sm">Waiting for track info...</span>
             </div>
         `;
+            return;
+        }
+
+        container.innerHTML = `
+        <div class="shrink-0">
+            <img src="${info.cover || info.default_cover_url}" 
+                 alt="Album Art"
+                 class="w-16 h-16 rounded-lg object-cover bg-gray-800"
+                 onerror="this.src='https://via.placeholder.com/64x64?text=♪';this.onerror=null;">
+        </div>
+        <div class="flex flex-col min-w-0">
+            <div class="song-title text-gray-100 font-semibold truncate">
+                ${info.title || 'Unknown Title'}
+            </div>
+            <div class="song-artist text-gray-400 truncate">
+                ${info.artist || 'Unknown Artist'}
+            </div>
+        </div>
+    `;
     }
 
     function updateAllSongInfoUI() {
-        const containers = document.querySelectorAll('.song-info');
-        containers.forEach(container => {
+        document.querySelectorAll('.song-info').forEach(container => {
             const stationId = container.dataset.stationId;
             updateSongInfoUI(stationId);
         });

@@ -1,99 +1,110 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Dash Radio Stations</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <%- include('partials/audioControls') %>
-  <style>
-    input[type="range"] {
-      -webkit-appearance: none;
-      height: 5px;
-      background: #374151;
-      border-radius: 5px;
-      background-image: linear-gradient(#6366f1, #6366f1);
-      background-repeat: no-repeat;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 15px;
-      width: 15px;
-      border-radius: 50%;
-      background: #6366f1;
-      cursor: pointer;
-    }
-    .preview-button:focus {
-      outline: none;
-    }
-  </style>
+    <style>
+      input[type="range"] {
+        -webkit-appearance: none;
+        height: 5px;
+        background: #374151;
+        border-radius: 5px;
+        background-image: linear-gradient(#6366f1, #6366f1);
+        background-repeat: no-repeat;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 15px;
+        width: 15px;
+        border-radius: 50%;
+        background: #6366f1;
+        cursor: pointer;
+      }
+
+      .preview-button:focus {
+        outline: none;
+      }
+    </style>
 </head>
+
 <body class="bg-gray-900 text-gray-100">
   <div class="header text-center py-8">
     <h1 class="text-4xl font-bold text-gray-100 mb-6">Dash Radio Stations</h1>
-    
-<!-- Search and Filter Controls -->
-<div class="max-w-5xl mx-auto mb-8 px-4">
-  <div class="flex flex-row gap-4 items-center">
-    <input type="text" 
-           placeholder="Search stations..." 
-           class="flex-1 px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-           oninput="handleSearch(this, document.getElementById('genre-filter'))">
-    
-    <select id="genre-filter" 
-            class="w-32 px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            onchange="handleSearch(document.querySelector('input[type=text]'), this)">
-      <option value="all">All</option>
-      <% genres.forEach(function(genre) { %>
-        <option value="<%= genre %>"><%= genre %></option>
-      <% }); %>
-    </select>
 
-    <a href="/playlist.m3u" 
-       class="hidden md:inline-block bg-indigo-600 text-white px-6 py-3 text-xl rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap">
-      Download M3U
-    </a>
-  </div>
-</div>
+    <!-- Search and Filter Controls -->
+    <div class="max-w-5xl mx-auto mb-8 px-4">
+      <div class="flex flex-row gap-4 items-center">
+        <input type="text" placeholder="Search stations..."
+          class="flex-1 px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          oninput="handleSearch(this, document.getElementById('genre-filter'))">
 
-  <% stationsByGenre.forEach(function({ genre, stations }) { %>
-    <div class="genre-section max-w-7xl mx-auto px-4 mb-8">
-      <div class="bg-gray-800 rounded-xl shadow-lg p-6">
-        <h2 class="genre-title text-3xl font-bold text-gray-100 mb-6 pb-3 border-b border-gray-700">
-          <%= genre %>
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <% stations.forEach(function(station) { %>
-            <div class="station-card bg-gray-700 rounded-lg p-6 hover:bg-gray-600 transition-colors">
-              <div class="station-name text-2xl md:text-lg font-semibold text-gray-100 mb-3">
-                <%= station.name %>
-              </div>
-              <div class="station-description text-lg md:text-sm text-gray-300 mb-4">
-                <%= station.description || '' %>
-              </div>
-              <div class="flex items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                  <button class="preview-button w-16 h-16 md:w-8 md:h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center focus:ring-2 focus:ring-indigo-500 transition-colors"
-                          data-stream-url="<%= baseUrl %>/stream/<%= station.id %>"
-                          data-station-id="<%= station.id %>"
-                          onclick="togglePreview(this)">
-                    <svg class="w-8 h-8 md:w-3 md:h-3" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
-                  <input type="range"
-                         class="volume-control hidden md:block w-20"
-                         min="0"
-                         max="1"
-                         step="0.05"
-                         value="0.1"
-                         oninput="updateVolume(this, <%= station.id %>)">
-                </div>
-              </div>
-            </div>
-          <% }); %>
-        </div>
+        <select id="genre-filter"
+          class="w-32 px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          onchange="handleSearch(document.querySelector('input[type=text]'), this)">
+          <option value="all">All</option>
+          <% genres.forEach(function(genre) { %>
+            <option value="<%= genre %>">
+              <%= genre %>
+            </option>
+            <% }); %>
+        </select>
+
+        <a href="/playlist.m3u"
+          class="hidden md:inline-block bg-indigo-600 text-white px-6 py-3 text-xl rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap">
+          Download M3U
+        </a>
       </div>
     </div>
-  <% }); %>
+
+    <% stationsByGenre.forEach(function({ genre, stations }) { %>
+      <div class="genre-section max-w-7xl mx-auto px-4 mb-8">
+        <div class="bg-gray-800 rounded-xl shadow-lg p-6">
+          <h2 class="genre-title text-3xl font-bold text-gray-100 mb-6 pb-3 border-b border-gray-700">
+            <%= genre %>
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% stations.forEach(function(station) { %>
+              <div class="station-card bg-gray-700 rounded-lg p-6 hover:bg-gray-600 transition-colors">
+                <div class="station-name text-2xl md:text-lg font-semibold text-gray-100 mb-3">
+                  <%= station.name %>
+                </div>
+
+                <!-- In stations.ejs, update the song-info div -->
+                <div class="song-info flex items-center space-x-4 mb-4" data-station-id="<%= station.id %>">
+                  <!-- Initial loading state -->
+                  <div class="flex items-center space-x-2 text-gray-400">
+                    <div class="w-2 h-2 rounded-full bg-gray-600"></div>
+                    <span class="text-sm">Waiting for track info...</span>
+                  </div>
+                </div>
+
+                <div class="station-description text-lg md:text-sm text-gray-300 mb-4">
+                  <%= station.description || '' %>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex items-center gap-4">
+                    <button
+                      class="preview-button w-16 h-16 md:w-8 md:h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center focus:ring-2 focus:ring-indigo-500 transition-colors"
+                      data-stream-url="<%= baseUrl %>/stream/<%= station.id %>" data-station-id="<%= station.id %>"
+                      onclick="togglePreview(this)">
+                      <svg class="w-8 h-8 md:w-3 md:h-3" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </button>
+                    <input type="range" class="volume-control hidden md:block w-20" min="0" max="1" step="0.05"
+                      value="0.1" oninput="updateVolume(this, <%= station.id %>)">
+                  </div>
+                </div>
+              </div>
+              <% }); %>
+          </div>
+        </div>
+      </div>
+      <% }); %>
 </body>
+
 </html>

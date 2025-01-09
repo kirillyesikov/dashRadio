@@ -7,6 +7,29 @@ const WebSocket = require('ws');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Create WebSocket server and client set
+const wsServer = new WebSocket.Server({ noServer: true });
+const songUpdateClients = new Set();
+
+// WebSocket connection handling
+wsServer.on('connection', (ws) => {
+    songUpdateClients.add(ws);
+
+    // Send initial ping
+    ws.send('2');
+
+    ws.on('message', (message) => {
+        if (message === '3') { // Pong response
+            // Keep connection alive
+        }
+    });
+
+    ws.on('close', () => {
+        songUpdateClients.delete(ws);
+    });
+});
+
+
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -43,30 +66,30 @@ async function fetchStations() {
 
 app.get('/', async (req, res) => {
     try {
-      const stations = await fetchStations();
-      
-      // Get unique genres and sort them
-      const genres = [...new Set(stations.map(s => s.genre))].sort();
-      
-      // Group stations by genre
-      const stationsByGenre = genres.map(genre => ({
-        genre,
-        stations: stations.filter(s => s.enabled && s.genre === genre)
-      }));
-  
-      // Prepare the base URL for stream links
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-  
-      res.render('stations', {
-        stationsByGenre,
-        genres,  // Pass the genres array for the dropdown
-        baseUrl
-      });
+        const stations = await fetchStations();
+
+        // Get unique genres and sort them
+        const genres = [...new Set(stations.map(s => s.genre))].sort();
+
+        // Group stations by genre
+        const stationsByGenre = genres.map(genre => ({
+            genre,
+            stations: stations.filter(s => s.enabled && s.genre === genre)
+        }));
+
+        // Prepare the base URL for stream links
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+        res.render('stations', {
+            stationsByGenre,
+            genres,  // Pass the genres array for the dropdown
+            baseUrl
+        });
     } catch (error) {
-      console.error('Error rendering stations view:', error);
-      res.status(500).send('Error rendering stations view');
+        console.error('Error rendering stations view:', error);
+        res.status(500).send('Error rendering stations view');
     }
-  });
+});
 
 // Serve an M3U playlist
 app.get('/playlist.m3u', async (req, res) => {
@@ -187,10 +210,7 @@ app.get('/stream/:stationId', async (req, res) => {
             res.status(500).send('Error handling stream');
         }
     }
-});
-
-// Function to forward song updates to all connected clients
-async function forwardSongUpdates() {
+});async function forwardSongUpdates() {
     try {
         const dashWs = new WebSocket('wss://web-api.dash-api.com/socket.io/?EIO=4&transport=websocket');
         
@@ -199,16 +219,14 @@ async function forwardSongUpdates() {
         });
 
         dashWs.on('message', (data) => {
-            // Forward song updates to all clients
             songUpdateClients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
-                    client.send(data);
+                    client.send(data.toString());
                 }
             });
         });
 
         dashWs.on('close', () => {
-            // Reconnect after delay
             setTimeout(forwardSongUpdates, 5000);
         });
 
@@ -234,7 +252,7 @@ app.use((req, res) => {
     res.status(404).send('Not Found');
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     const host = process.env.HOST || 'localhost';
     console.log(`Server running at http://${host}:${port}`);
 });
