@@ -82,5 +82,3 @@ dashRadio/
 - Axios - HTTP client
 - Tailwind CSS - Styling
 - Node.js Audio - Stream handling
-
-## Con
