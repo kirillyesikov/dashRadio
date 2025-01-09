@@ -23,7 +23,8 @@ kind create cluster
 
 
 
-## Build and Tag your Docker image to match the format of your private registry URL. Replace <registry-url> with the address of your private registry:
+## Build and Tag your Docker image to match the format of your private registry URL. 
+### Replace <registry-url> with the address of your private registry:
 
 ```
 docker build -t radio .
@@ -43,7 +44,8 @@ docker push <registry-url>/radio:latest
 ```
 
 
-## In order to use the deployment.yaml you need to create an <imagePullSecret> and change the value inside the deployment.yaml as well as changing your <image>
+## In order to use the deployment.yaml 
+### You need to create an <imagePullSecret> and change the value inside the deployment.yaml as well as changing your <image>
  
 ```
       imagePullSecrets:
