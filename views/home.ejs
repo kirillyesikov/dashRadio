@@ -1,0 +1,24 @@
+<!-- File: views/home.ejs -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dash Radio Playlist Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-900 min-h-screen">
+    <div class="max-w-2xl mx-auto p-6">
+      <div class="bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+        <h1 class="text-3xl font-bold text-gray-100 mb-6">Dash Radio Playlist Generator</h1>
+        <p class="text-gray-300 mb-8">Welcome to the Dash Radio Playlist Generator. Choose an option below:</p>
+        <div class="space-x-4">
+          <a href="/view" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+            View Stations in Browser
+          </a>
+          <a href="/playlist.m3u" class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+            Download M3U Playlist
+          </a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

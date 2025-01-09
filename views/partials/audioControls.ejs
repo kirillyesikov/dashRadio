@@ -1,0 +1,205 @@
+<!-- File: views/partials/audioControls.ejs -->
+<style>
+    .preview-button {
+        transition: all 0.2s ease;
+    }
+
+    .preview-button:focus {
+        outline: none;
+    }
+
+    .preview-button.loading {
+        opacity: 0.7;
+        cursor: wait;
+    }
+
+    .icon-play {
+        fill: currentColor;
+        margin-left: 2px;
+    }
+</style>
+
+<script>
+    window.currentAudio = null;
+    window.currentButton = null;
+    window.isTransitioning = false;
+
+    const icons = {
+        play: `<svg class="icon-play" width="12" height="12" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>`,
+        pause: `<svg width="12" height="12" viewBox="0 0 24 24">
+               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+             </svg>`,
+        loading: `<svg width="12" height="12" viewBox="0 0 24 24">
+                 <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+               </svg>`
+    };
+
+    function updateButtonStyle(button, state) {
+        button.classList.remove(
+            'bg-indigo-500', 'bg-indigo-600', 'bg-indigo-700',
+            'hover:bg-indigo-600', 'hover:bg-indigo-700',
+            'loading'
+        );
+
+        switch (state) {
+            case 'stopped':
+                button.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                button.innerHTML = icons.play;
+                break;
+            case 'playing':
+                button.classList.add('bg-indigo-700', 'hover:bg-indigo-600');
+                button.innerHTML = icons.pause;
+                break;
+            case 'loading':
+                button.classList.add('bg-indigo-600', 'loading');
+                button.innerHTML = icons.loading;
+                break;
+        }
+    }
+
+    async function stopPreview() {
+        if (window.isTransitioning) return;
+        window.isTransitioning = true;
+
+        try {
+            if (window.currentAudio) {
+                console.log('Stopping audio');
+
+                const audio = window.currentAudio;
+                audio.onended = null;
+                audio.onpause = null;
+                audio.onerror = null;
+                audio.onloadedmetadata = null;
+                audio.oncanplay = null;
+                audio.onplaying = null;
+
+                await audio.pause();
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                if (audio === window.currentAudio) {
+                    audio.src = '';
+                    audio.load();
+                    window.currentAudio = null;
+                }
+            }
+
+            if (window.currentButton) {
+                updateButtonStyle(window.currentButton, 'stopped');
+                window.currentButton = null;
+            }
+        } catch (error) {
+            console.error('Error in stopPreview:', error);
+        } finally {
+            window.isTransitioning = false;
+        }
+    }
+
+    function updateVolume(input, stationId) {
+        if (window.currentAudio && window.currentButton &&
+            window.currentButton.dataset.stationId === stationId.toString()) {
+            window.currentAudio.volume = input.value;
+        }
+    }
+
+    async function togglePreview(button) {
+        if (window.isTransitioning) return;
+
+        const streamUrl = button.dataset.streamUrl;
+        const stationId = button.dataset.stationId;
+
+        if (window.currentButton === button && window.currentAudio) {
+            await stopPreview();
+            return;
+        }
+
+        await stopPreview();
+
+        try {
+            window.isTransitioning = true;
+            window.currentButton = button;
+            updateButtonStyle(button, 'loading');
+
+            const audio = new Audio();
+            audio.crossOrigin = "anonymous";
+
+            // Set default volume
+            audio.volume = 0.1;
+
+            audio.onerror = (e) => {
+                console.error('Audio error:', e);
+                stopPreview();
+                if (!window.isTransitioning) {
+                    alert('Error playing preview. Please try again.');
+                }
+            };
+
+            audio.onloadedmetadata = () => {
+                if (audio === window.currentAudio) {
+                    updateButtonStyle(button, 'playing');
+                    audio.play().catch(error => {
+                        console.error('Play error:', error);
+                        stopPreview();
+                    });
+                }
+            };
+
+            const volumeControl = document.querySelector(`input[onchange*="${stationId}"]`);
+            if (volumeControl) {
+                volumeControl.value = 0.1;  // Ensure slider matches default
+                audio.volume = volumeControl.value;
+            }
+
+            window.currentAudio = audio;
+            audio.src = streamUrl;
+            await audio.load();
+
+        } catch (error) {
+            console.error('Error in togglePreview:', error);
+            stopPreview();
+        } finally {
+            window.isTransitioning = false;
+        }
+    }
+
+    // Handle search and filter
+    function handleSearch(searchInput, genreSelect) {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedGenre = genreSelect.value;
+        const stations = document.querySelectorAll('.station-card');
+        const genreSections = document.querySelectorAll('.genre-section');
+
+        genreSections.forEach(section => {
+            const genreTitle = section.querySelector('.genre-title').textContent.trim();
+            const genreStations = section.querySelectorAll('.station-card');
+            let visibleStations = 0;
+
+            genreStations.forEach(station => {
+                const stationName = station.querySelector('.station-name').textContent.toLowerCase();
+                const stationDesc = station.querySelector('.station-description').textContent.toLowerCase();
+                const matchesSearch = searchTerm === '' ||
+                    stationName.includes(searchTerm) ||
+                    stationDesc.includes(searchTerm);
+                const matchesGenre = selectedGenre === 'all' || genreTitle === selectedGenre;
+
+                if (matchesSearch && matchesGenre) {
+                    station.style.display = '';
+                    visibleStations++;
+                } else {
+                    station.style.display = 'none';
+                }
+            });
+
+            section.style.display = visibleStations > 0 ? '' : 'none';
+        });
+    }
+
+    window.addEventListener('beforeunload', stopPreview);
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopPreview();
+        }
+    });
+</script>
