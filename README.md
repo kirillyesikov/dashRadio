@@ -2,6 +2,8 @@
 
 A Node.js web application that generates M3U playlists for Dash Radio stations and provides a web interface for streaming and managing radio stations.
 
+![DashRadio Interface](screenshots/screenshot.png)
+
 ## Features
 
 - 🎵 Browse and search Dash Radio stations
