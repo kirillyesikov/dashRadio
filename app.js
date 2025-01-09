@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const app = express();
-const port = process.env.PORT || 1331;
+const port = process.env.PORT || 3000;
 
 // View engine setup
 app.set('view engine', 'ejs');
