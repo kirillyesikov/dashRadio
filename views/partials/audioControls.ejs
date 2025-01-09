@@ -19,7 +19,7 @@
     }
 
     .song-info {
-        min-height: 3rem;
+        min-height: 4rem;
     }
 
     .song-title {
@@ -324,6 +324,17 @@
             </div>
             <div class="song-artist text-gray-400 truncate">
                 ${info.artist || 'Unknown Artist'}
+            </div>
+            <div class="flex items-center space-x-2 mt-1">
+                <div class="live-indicator flex items-center space-x-1">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span class="text-xs text-gray-400">Live</span>
+                </div>
+                ${info.formattedDuration ? `
+                    <span class="text-xs text-gray-400">
+                        ${info.formattedDuration}
+                    </span>
+                ` : ''}
             </div>
         </div>
     `;
