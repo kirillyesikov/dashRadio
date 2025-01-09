@@ -197,9 +197,4 @@
 
     window.addEventListener('beforeunload', stopPreview);
 
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopPreview();
-        }
-    });
 </script>
