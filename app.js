@@ -38,12 +38,7 @@ async function fetchStations() {
     }
 }
 
-// Updated routes to use EJS
-app.get('/', (req, res) => {
-    res.render('home');
-});
-
-app.get('/view', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
       const stations = await fetchStations();
       
@@ -70,7 +65,7 @@ app.get('/view', async (req, res) => {
     }
   });
 
-// Your existing playlist route remains the same
+// Serve an M3U playlist
 app.get('/playlist.m3u', async (req, res) => {
     try {
         const stations = await fetchStations();
@@ -101,7 +96,7 @@ app.get('/playlist.m3u', async (req, res) => {
     }
 });
 
-// Your improved stream route remains the same
+// API for stream redirection
 app.get('/stream/:stationId', async (req, res) => {
     try {
         const stations = await fetchStations();
