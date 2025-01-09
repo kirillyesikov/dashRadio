@@ -31,30 +31,29 @@
   <div class="header text-center py-8">
     <h1 class="text-4xl font-bold text-gray-100 mb-6">Dash Radio Stations</h1>
     
-    <!-- Search and Filter Controls -->
-    <div class="max-w-5xl mx-auto mb-8 px-4">
-      <div class="flex flex-col gap-4">
-        <input type="text" 
-               placeholder="Search stations..." 
-               class="w-full px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-               oninput="handleSearch(this, document.getElementById('genre-filter'))">
-        
-        <select id="genre-filter" 
-                class="w-full px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                onchange="handleSearch(document.querySelector('input[type=text]'), this)">
-          <option value="all">All Genres</option>
-          <% genres.forEach(function(genre) { %>
-            <option value="<%= genre %>"><%= genre %></option>
-          <% }); %>
-        </select>
+<!-- Search and Filter Controls -->
+<div class="max-w-5xl mx-auto mb-8 px-4">
+  <div class="flex flex-row gap-4 items-center">
+    <input type="text" 
+           placeholder="Search stations..." 
+           class="flex-1 px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+           oninput="handleSearch(this, document.getElementById('genre-filter'))">
+    
+    <select id="genre-filter" 
+            class="w-32 px-4 py-3 text-xl bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            onchange="handleSearch(document.querySelector('input[type=text]'), this)">
+      <option value="all">All</option>
+      <% genres.forEach(function(genre) { %>
+        <option value="<%= genre %>"><%= genre %></option>
+      <% }); %>
+    </select>
 
-        <a href="/playlist.m3u" 
-           class="w-full inline-block bg-indigo-600 text-white px-6 py-3 text-xl rounded-lg hover:bg-indigo-700 transition-colors text-center">
-          Download M3U
-        </a>
-      </div>
-    </div>
+    <a href="/playlist.m3u" 
+       class="hidden md:inline-block bg-indigo-600 text-white px-6 py-3 text-xl rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap">
+      Download M3U
+    </a>
   </div>
+</div>
 
   <% stationsByGenre.forEach(function({ genre, stations }) { %>
     <div class="genre-section max-w-7xl mx-auto px-4 mb-8">
@@ -89,11 +88,6 @@
                          value="0.1"
                          oninput="updateVolume(this, <%= station.id %>)">
                 </div>
-                <a href="<%= baseUrl %>/stream/<%= station.id %>"
-                   class="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors text-lg md:text-sm"
-                   target="_blank">
-                  Open Stream
-                </a>
               </div>
             </div>
           <% }); %>
