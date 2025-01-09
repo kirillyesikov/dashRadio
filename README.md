@@ -1,4 +1,4 @@
-# Simple DashRadio
+# A Simpler DashRadio
 
 A Node.js web application that generates M3U playlists for Dash Radio [(LITT Live Music)](https://littlive.com) stations as well as providing a web interface for streaming and managing radio stations in a simple dark user friendly UX.
 
