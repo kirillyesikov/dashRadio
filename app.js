@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const WebSocket = require('ws');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -188,6 +189,41 @@ app.get('/stream/:stationId', async (req, res) => {
     }
 });
 
+// Function to forward song updates to all connected clients
+async function forwardSongUpdates() {
+    try {
+        const dashWs = new WebSocket('wss://web-api.dash-api.com/socket.io/?EIO=4&transport=websocket');
+        
+        dashWs.on('open', () => {
+            dashWs.send('40');  // Initial connection message
+        });
+
+        dashWs.on('message', (data) => {
+            // Forward song updates to all clients
+            songUpdateClients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(data);
+                }
+            });
+        });
+
+        dashWs.on('close', () => {
+            // Reconnect after delay
+            setTimeout(forwardSongUpdates, 5000);
+        });
+
+        dashWs.on('error', (error) => {
+            console.error('Dash WebSocket error:', error);
+        });
+    } catch (error) {
+        console.error('Error in song updates:', error);
+        setTimeout(forwardSongUpdates, 5000);
+    }
+}
+
+// Start forwarding song updates
+forwardSongUpdates();
+
 // Error handlers
 app.use((err, req, res, next) => {
     console.error('Application error:', err);
@@ -201,4 +237,10 @@ app.use((req, res) => {
 app.listen(port, () => {
     const host = process.env.HOST || 'localhost';
     console.log(`Server running at http://${host}:${port}`);
+});
+
+server.on('upgrade', (request, socket, head) => {
+    wsServer.handleUpgrade(request, socket, head, (ws) => {
+        wsServer.emit('connection', ws, request);
+    });
 });

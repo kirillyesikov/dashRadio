@@ -17,6 +17,39 @@
         fill: currentColor;
         margin-left: 2px;
     }
+
+    .song-info {
+        min-height: 3rem;
+    }
+
+    .song-title {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .song-artist {
+        color: #9CA3AF;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #9CA3AF;
+    }
+
+    .live-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 9999px;
+        background-color: #10B981;
+    }
 </style>
 
 <script>
@@ -194,6 +227,83 @@
             section.style.display = visibleStations > 0 ? '' : 'none';
         });
     }
+
+    let ws = null;
+    let wsConnected = false;
+    const songInfos = {};
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+        ws.onopen = () => {
+            wsConnected = true;
+            updateAllSongInfoUI();
+        };
+
+        ws.onclose = () => {
+            wsConnected = false;
+            updateAllSongInfoUI();
+            // Reconnect after 5 seconds
+            setTimeout(connectWebSocket, 5000);
+        };
+
+        ws.onmessage = (event) => {
+            const data = event.data;
+
+            // Handle ping
+            if (data === '2') {
+                ws.send('3');
+                return;
+            }
+
+            // Parse song updates
+            if (data.startsWith('42["song_updates"')) {
+                try {
+                    const jsonStr = data.substring(2);
+                    const [eventName, songData] = JSON.parse(jsonStr);
+
+                    // Update stored song info
+                    Object.entries(songData).forEach(([stationId, info]) => {
+                        songInfos[stationId] = info;
+                        updateSongInfoUI(stationId);
+                    });
+                } catch (error) {
+                    console.error('Error parsing song data:', error);
+                }
+            }
+        };
+    }
+
+    function updateSongInfoUI(stationId) {
+        const container = document.querySelector(`.song-info[data-station-id="${stationId}"]`);
+        if (!container) return;
+
+        const info = songInfos[stationId];
+        if (!info) return;
+
+        container.innerHTML = `
+            <div>
+                <div class="song-title text-gray-100">${info.title || 'Unknown Title'}</div>
+                <div class="song-artist">${info.artist || 'Unknown Artist'}</div>
+                <div class="live-indicator mt-1">
+                    <div class="live-dot"></div>
+                    <span>Live</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateAllSongInfoUI() {
+        const containers = document.querySelectorAll('.song-info');
+        containers.forEach(container => {
+            const stationId = container.dataset.stationId;
+            updateSongInfoUI(stationId);
+        });
+    }
+
+    // Initialize WebSocket connection
+    connectWebSocket();
 
     window.addEventListener('beforeunload', stopPreview);
 
