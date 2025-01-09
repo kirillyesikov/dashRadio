@@ -70,11 +70,11 @@ The application will be available at `http://localhost:3000`
 dashRadio/
 ├── app.js           # Main application file
 ├── package.json     # Project dependencies
-├── views/          
-│   ├── home.ejs    # Home page template
-│   ├── stations.ejs # Station browser template
-│   └── partials/   # EJS partial templates
-└── public/         # Static assets (if any)
+└── views/          
+    ├── home.ejs    # Home page template
+    ├── stations.ejs # Station browser template
+    └── partials/   # EJS partial templates
+
 ```
 
 ### Technologies Used
