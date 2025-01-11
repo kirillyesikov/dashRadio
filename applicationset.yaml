@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1  
+kind: ApplicationSet  
+metadata:  
+  name: radio 
+spec:  
+  generators:  
+    - git:  
+        repoURL: https://github.com/kirillyesikov/pipelineDEMO.git  
+        revision: HEAD  
+        files:  
+        - path: "deployment/*/config.json" 
+  template:  
+    metadata:  
+      name: '{{cluster.namespace}}-radio'  
+    spec:  
+      project: ARGO_PROJECT_ID  
+      source:  
+        repoURL: https://github.com/kirillyesikov/dashRadio.git 
+        targetRevision: HEAD  
+        path: "deployment"  
+      destination:  
+        server: '{{cluster.address}}'  
+        namespace: '{{cluster.namespace}}'  
+      syncPolicy:  
+        syncOptions:
+        - CreateNamespace=true
