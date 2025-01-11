@@ -1,0 +1,256 @@
+pipeline:
+  identifier: cicdgitopspipeline
+  name: cicd-gitops-pipeline
+  orgIdentifier: default
+  projectIdentifier: ProxMOx
+  stages:
+    - stage:
+        description: ""
+        identifier: cistage
+        name: ci-stage
+        spec:
+          cloneCodebase: false
+          execution:
+            steps:
+              - step:
+                  identifier: Run_OWASP_Scan
+                  name: Run OWASP Scan
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: repository
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+                      fail_on_severity: none
+                  type: Owasp
+              - step:
+                  type: AquaTrivy
+                  name: AquaTrivy_1
+                  identifier: AquaTrivy_1
+                  spec:
+                    mode: orchestration
+                    config: default
+                    target:
+                      type: container
+                      detection: auto
+                    advanced:
+                      log:
+                        level: info
+                    privileged: true
+                    image:
+                      type: docker_v2
+                      tag: latest
+                      name: kyesikov/radio
+              - step:
+                  identifier: BuildAndPushDockerRegistry
+                  name: BuildAndPushDockerRegistry
+                  spec:
+                    connectorRef: docker_connector
+                    dockerfile: Dockerfile
+                    repo: <+pipeline.variables.imageRepo>
+                    tags:
+                      - <+pipeline.variables.imageTag>
+                  type: BuildAndPushDockerRegistry
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: kirill_k8sconnector
+              namespace: argocd
+              automountServiceAccountToken: true
+              nodeSelector: {}
+              os: Linux
+          caching:
+            enabled: false
+            paths: []
+          buildIntelligence:
+            enabled: false
+        type: CI
+        delegateSelectors:
+          - kubernetes-delegate
+    - stage:
+        description: ""
+        failureStrategies:
+          - onFailure:
+              action:
+                type: StageRollback
+              errors:
+                - AllErrors
+        identifier: DeployDev
+        name: DeployDev
+        spec:
+          deploymentType: Kubernetes
+          environment:
+            environmentRef: kirilldevenv
+            deployToAll: false
+            gitOpsClusters:
+              - identifier: account.gitopscluster
+                agentIdentifier: account.gitopsagent
+          execution:
+            rollbackSteps: []
+            steps:
+              - step:
+                  identifier: UpdateDeploymentArtifact
+                  name: UpdateDeploymentArtifact
+                  spec:
+                    environmentVariables: []
+                    onDelegate: true
+                    outputVariables: []
+                    shell: Bash
+                    source:
+                      spec:
+                        script: |-
+                          export IMAGE_TAG="<+pipeline.variables.imageRepo>:<+pipeline.variables.imageTag>"
+                          rm -rf dashRadio
+                          git config --global user.email ci-bot@argocd.com && git config --global user.name ci-bot
+                          echo "cloning repo..."
+                          GITHUBPAT=<+secrets.getValue("kirill_gitpat")>
+                          git clone https://oauth2:$GITHUBPAT@github.com/kirillyesikov/dashRadio.git
+                          cd pipelineDEMO
+                          ls
+                          FILE_PATH="deployment.yaml"
+
+                          # Detect OS and set the sed in-place edit command accordingly
+                          if [[ "$OSTYPE" == "darwin"* ]]; then
+                              SED_COMMAND="sed -i ''"
+                          else
+                              SED_COMMAND="sed -i"
+                          fi
+
+                          echo "Updating image tag in deployment YAML"
+                          $SED_COMMAND "s|image: .*|image: $IMAGE_TAG|g" "$FILE_PATH"
+
+                          echo "Committing and pushing"
+                          git add .
+                          git commit -m "Update latest deployment artifact"
+                          git push
+                      type: Inline
+                  timeout: 10m
+                  type: ShellScript
+              - step:
+                  identifier: updateReleaseRepo
+                  name: Update Release Repo
+                  spec:
+                    variables:
+                      - name: asset_id
+                        type: String
+                        value: <+trigger.gitUser>-<+trigger.commitSha>
+                  timeout: 10m
+                  type: GitOpsUpdateReleaseRepo
+              - step:
+                  identifier: mergePR
+                  name: Merge PR
+                  spec:
+                    deleteSourceBranch: true
+                  timeout: 10m
+                  type: MergePR
+              - step:
+                  identifier: fetchLinkedApps
+                  name: Fetch Linked Apps
+                  spec: {}
+                  timeout: 10m
+                  type: GitOpsFetchLinkedApps
+          gitOpsEnabled: true
+          service:
+            serviceRef: kirill_app
+        tags: {}
+        type: Deployment
+    - stage:
+        description: ""
+        identifier: ApprovePromoteProd
+        name: ApprovePromoteProd
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: Email
+                  name: work incoming
+                  identifier: Approve_the_step_dude
+                  spec:
+                    to: kyesikov@gmail.com
+                    cc: ""
+                    subject: WORK INCOMING
+                    body: APPROVAL PENDING
+                  timeout: 10m
+              - step:
+                  identifier: ApprovePromoteProd
+                  name: ApprovePromoteProd
+                  spec:
+                    approvalMessage: |-
+                      Please review the following information
+                      and approve the pipeline progression
+                    approverInputs: []
+                    approvers:
+                      disallowPipelineExecutor: false
+                      minimumCount: 1
+                      userGroups:
+                        - account._account_all_users
+                    includePipelineExecutionHistory: true
+                    isAutoRejectEnabled: false
+                  timeout: 1d
+                  type: HarnessApproval
+        tags: {}
+        type: Approval
+    - stage:
+        description: ""
+        failureStrategies:
+          - onFailure:
+              action:
+                type: StageRollback
+              errors:
+                - AllErrors
+        identifier: DeployProd
+        name: DeployProd
+        spec:
+          deploymentType: Kubernetes
+          environment:
+            environmentRef: kirillprodenv
+            deployToAll: false
+            gitOpsClusters:
+              - identifier: account.gitopscluster
+                agentIdentifier: account.gitopsagent
+          execution:
+            rollbackSteps: []
+            steps:
+              - step:
+                  identifier: updateReleaseRepo
+                  name: Update Release Repo
+                  spec:
+                    variables:
+                      - name: asset_id
+                        type: String
+                        value: <+trigger.gitUser>-<+trigger.commitSha>
+                  timeout: 10m
+                  type: GitOpsUpdateReleaseRepo
+              - step:
+                  identifier: mergePR
+                  name: Merge PR
+                  spec:
+                    deleteSourceBranch: true
+                  timeout: 10m
+                  type: MergePR
+              - step:
+                  identifier: fetchLinkedApps
+                  name: Fetch Linked Apps
+                  spec: {}
+                  timeout: 10m
+                  type: GitOpsFetchLinkedApps
+          gitOpsEnabled: true
+          service:
+            serviceRef: kirill_app
+        tags: {}
+        type: Deployment
+  tags: {}
+  variables:
+    - description: ""
+      name: imageRepo
+      required: false
+      type: String
+      value: kyesikov/dashRadio
+    - description: ""
+      name: imageTag
+      required: false
+      type: String
+      value: <+trigger.commitSha>
