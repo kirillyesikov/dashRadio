@@ -20,7 +20,9 @@ pipeline:
                     config: default
                     target:
                       type: repository
-                      detection: auto
+                      detection: manual
+                      name: kyesikov/dashRadio
+                      variant: main
                     advanced:
                       log:
                         level: info
@@ -41,7 +43,7 @@ pipeline:
                         level: info
                     privileged: true
                     image:
-                      type: docker_v2
+                      type: local_image
                       tag: latest
                       name: kyesikov/radio
               - step:
@@ -49,10 +51,11 @@ pipeline:
                   name: BuildAndPushDockerRegistry
                   spec:
                     connectorRef: docker_connector
-                    dockerfile: Dockerfile
                     repo: <+pipeline.variables.imageRepo>
                     tags:
                       - <+pipeline.variables.imageTag>
+                    caching: false
+                    dockerfile: Dockerfile
                   type: BuildAndPushDockerRegistry
           infrastructure:
             type: KubernetesDirect
