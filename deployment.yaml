@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: radio
-        image: kyesikov/radio:latest
+        image: kyesikov/radio:null
         ports:
         - containerPort: 3000
       imagePullSecrets:
