@@ -3,13 +3,18 @@ pipeline:
   name: cicd-gitops-pipeline
   orgIdentifier: default
   projectIdentifier: ProxMOx
+  properties:
+    ci:
+      codebase:
+        connectorRef: kirill_gitconnector
+        build: <+input>
   stages:
     - stage:
         description: ""
         identifier: cistage
         name: ci-stage
         spec:
-          cloneCodebase: false
+          cloneCodebase: true
           execution:
             steps:
               - step:
