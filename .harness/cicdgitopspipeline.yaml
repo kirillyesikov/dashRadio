@@ -37,7 +37,9 @@ pipeline:
                     config: default
                     target:
                       type: container
-                      detection: auto
+                      detection: manual
+                      name: kyesikov/radio
+                      variant: latest
                     advanced:
                       log:
                         level: info
