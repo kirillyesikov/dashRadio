@@ -55,8 +55,7 @@ pipeline:
                     connectorRef: docker_connector
                     dockerfile: Dockerfile
                     repo: <+pipeline.variables.imageRepo>
-                    tags:
-                      - <+pipeline.variables.imageTag>
+                    tags: <+pipeline.variables.imageTag>
                   type: BuildAndPushDockerRegistry
           infrastructure:
             type: KubernetesDirect
@@ -161,6 +160,8 @@ pipeline:
             serviceRef: kirill_app
         tags: {}
         type: Deployment
+        delegateSelectors:
+          - kubernetes-delegate
     - stage:
         description: ""
         identifier: ApprovePromoteProd
@@ -246,6 +247,8 @@ pipeline:
             serviceRef: kirill_app
         tags: {}
         type: Deployment
+        delegateSelectors:
+          - kubernetes-delegate
   tags: {}
   variables:
     - description: ""
