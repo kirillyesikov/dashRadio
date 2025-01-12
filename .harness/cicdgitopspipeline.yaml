@@ -6,7 +6,7 @@ pipeline:
   properties:
     ci:
       codebase:
-        connectorRef: kirill_gitconnector
+        connectorRef: kirillgitconnector
         build: <+input>
   stages:
     - stage:
