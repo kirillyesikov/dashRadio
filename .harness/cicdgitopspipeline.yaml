@@ -55,7 +55,8 @@ pipeline:
                     connectorRef: docker_connector
                     dockerfile: Dockerfile
                     repo: <+pipeline.variables.imageRepo>
-                    tags: <+pipeline.variables.imageTag>
+                    tags:
+                      - <+pipeline.variables.imageTag>
                   type: BuildAndPushDockerRegistry
           infrastructure:
             type: KubernetesDirect
