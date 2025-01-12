@@ -261,9 +261,9 @@ pipeline:
       name: imageRepo
       required: false
       type: String
-      value: kyesikov
+      value: kyesikov/radio
     - description: ""
       name: imageTag
       required: false
       type: String
-      value: latest
+      value: <+trigger.commitSha>
