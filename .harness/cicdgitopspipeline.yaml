@@ -56,13 +56,13 @@ pipeline:
               - step:
                   identifier: BuildAndPushDockerRegistry
                   name: BuildAndPushDockerRegistry
+                  type: BuildAndPushDockerRegistry
                   spec:
                     connectorRef: docker_connector
-                    dockerfile: Dockerfile
                     repo: <+pipeline.variables.imageRepo>
                     tags:
                       - <+pipeline.variables.imageTag>
-                  type: BuildAndPushDockerRegistry
+                    dockerfile: Dockerfile
           infrastructure:
             type: KubernetesDirect
             spec:
@@ -261,9 +261,9 @@ pipeline:
       name: imageRepo
       required: false
       type: String
-      value: kyesikov/dashRadio
+      value: kyesikov
     - description: ""
       name: imageTag
       required: false
       type: String
-      value: <+trigger.commitSha>
+      value: latest
