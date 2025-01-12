@@ -266,4 +266,4 @@ pipeline:
       name: imageTag
       required: false
       type: String
-      value: latest
+      value: <+trigger.commitSha>
