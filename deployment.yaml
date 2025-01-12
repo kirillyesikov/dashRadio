@@ -12,7 +12,7 @@ spec:
         app: "radio"
     spec:
       containers:
-      - image: kyesikov/radio:null
+      - image: "kyesikov/radio:null"
         name: "radio"
         ports:
         - containerPort: 3000
