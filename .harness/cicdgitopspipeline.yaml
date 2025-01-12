@@ -117,7 +117,7 @@ pipeline:
                           echo "cloning repo..."
                           GITHUBPAT=<+secrets.getValue("kirill_gitpat")>
                           git clone https://oauth2:$GITHUBPAT@github.com/kirillyesikov/dashRadio.git
-                          cd pipelineDEMO
+                          cd dashRadio
                           ls
                           FILE_PATH="deployment.yaml"
 
