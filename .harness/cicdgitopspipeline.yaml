@@ -20,7 +20,9 @@ pipeline:
                     config: default
                     target:
                       type: repository
-                      detection: auto
+                      detection: manual
+                      name: kirillyesikov/dashRadio
+                      variant: main
                     advanced:
                       log:
                         level: info
@@ -35,7 +37,9 @@ pipeline:
                     config: default
                     target:
                       type: container
-                      detection: auto
+                      detection: manual
+                      name: kyesikov/radio
+                      variant: latest
                     advanced:
                       log:
                         level: info
