@@ -1,0 +1,34 @@
+service:
+  name: kirill_app
+  identifier: kirill_app
+  orgIdentifier: default
+  projectIdentifier: ProxMOx
+  serviceDefinition:
+    spec:
+      manifests:
+        - manifest:
+            identifier: gitopsrepo
+            type: ReleaseRepo
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: kirillgitconnector
+                  gitFetchType: Branch
+                  paths:
+                    - deployment.yaml
+                  branch: main
+        - manifest:
+            identifier: gitops
+            type: DeploymentRepo
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: kirillgitconnector
+                  gitFetchType: Branch
+                  paths:
+                    - applicationset.yaml
+                  branch: main
+    type: Kubernetes
+  gitOpsEnabled: true
