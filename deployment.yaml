@@ -1,36 +1,22 @@
-apiVersion: apps/v1
-kind: Deployment
 metadata:
-  name: radio
+  name: "radio"
   labels:
-    app: radio
+    app: "radio"
+apiVersion: "apps/v1"
+kind: "Deployment"
+asset_id: "null-null"
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: radio
   template:
     metadata:
       labels:
-        app: radio
+        app: "radio"
     spec:
       containers:
-      - name: radio
-        image: kyesikov/radio:latest
+      - image: "kyesikov/radio:null"
+        name: "radio"
         ports:
         - containerPort: 3000
-      imagePullSecrets:
-      - name: regcred
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: radio-service
-spec:
+  replicas: 2
   selector:
-    app: radio
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 3000
-  type: LoadBalancer
+    matchLabels:
+      app: "radio"

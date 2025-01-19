@@ -3,13 +3,18 @@ pipeline:
   name: cicd-gitops-pipeline
   orgIdentifier: default
   projectIdentifier: ProxMOx
+  properties:
+    ci:
+      codebase:
+        connectorRef: kirillgitconnector
+        build: <+input>
   stages:
     - stage:
         description: ""
         identifier: cistage
         name: ci-stage
         spec:
-          cloneCodebase: false
+          cloneCodebase: true
           execution:
             steps:
               - step:
@@ -22,6 +27,7 @@ pipeline:
                       type: repository
                       detection: manual
                       name: kyesikov/dashRadio
+                      name: kirillyesikov/dashRadio
                       variant: main
                     advanced:
                       log:
@@ -37,7 +43,9 @@ pipeline:
                     config: default
                     target:
                       type: container
-                      detection: auto
+                      detection: manual
+                      name: kyesikov/radio
+                      variant: latest
                     advanced:
                       log:
                         level: info
@@ -49,14 +57,19 @@ pipeline:
               - step:
                   identifier: BuildAndPushDockerRegistry
                   name: BuildAndPushDockerRegistry
+                  type: BuildAndPushDockerRegistry
                   spec:
                     connectorRef: docker_connector
                     repo: <+pipeline.variables.imageRepo>
                     tags:
                       - <+pipeline.variables.imageTag>
+
                     caching: false
                     dockerfile: Dockerfile
                   type: BuildAndPushDockerRegistry
+
+                    dockerfile: Dockerfile
+
           infrastructure:
             type: KubernetesDirect
             spec:
@@ -111,7 +124,7 @@ pipeline:
                           echo "cloning repo..."
                           GITHUBPAT=<+secrets.getValue("kirill_gitpat")>
                           git clone https://oauth2:$GITHUBPAT@github.com/kirillyesikov/dashRadio.git
-                          cd pipelineDEMO
+                          cd dashRadio
                           ls
                           FILE_PATH="deployment.yaml"
 
@@ -160,6 +173,8 @@ pipeline:
             serviceRef: kirill_app
         tags: {}
         type: Deployment
+        delegateSelectors:
+          - kubernetes-delegate
     - stage:
         description: ""
         identifier: ApprovePromoteProd
@@ -245,13 +260,15 @@ pipeline:
             serviceRef: kirill_app
         tags: {}
         type: Deployment
+        delegateSelectors:
+          - kubernetes-delegate
   tags: {}
   variables:
     - description: ""
       name: imageRepo
       required: false
       type: String
-      value: kyesikov/dashRadio
+      value: kyesikov/radio
     - description: ""
       name: imageTag
       required: false
